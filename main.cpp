@@ -9,6 +9,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <QString>
+#include <algorithm>
+#include <string>
 
 using namespace std;
 
@@ -48,13 +50,40 @@ QString decodePassword(const QString &pass, const QString &key)
     return result;
 }
 
-int main(int argc, char * const argv[])
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
-    QString password = "your_password_from_accounts.xml";
-    QString key = "your_jid_from_accounts.xml";
-    QString out = decodePassword(password,key);
+    char ** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
+
+bool cmdOptionExists(char ** begin, char ** end, const std::string & option)
+{
+    return std::find(begin, end, option) != end;
+}
+
+int main(int argc, char * argv[])
+{
     
-    std::cout << out.toStdString() << std::endl;
-	
+    if(cmdOptionExists(argv, argv+argc, "-j") && cmdOptionExists(argv, argv+argc, "-p"))
+    {
+        QString password = getCmdOption(argv, argv+argc, "-p");
+        QString key = getCmdOption(argv, argv+argc, "-j");
+        QString out = decodePassword(password,key);
+        
+        std::cout << "Your password is:" << out.toStdString() << std::endl;
+    }
+
+    if(cmdOptionExists(argv, argv+argc, "-h") || !cmdOptionExists(argv, argv+argc, "-j") || !cmdOptionExists(argv, argv+argc, "-p"))
+    {
+        std::cout << "Usage: pppr [OPTIONS]" << std::endl << std::endl;
+        std::cout << " -h Help." << std::endl;
+        std::cout << " -j Your Jabber ID" << std::endl;
+        std::cout << " -p Your encoded password" << std::endl;        
+    }
+
 	return EXIT_SUCCESS;
 }
